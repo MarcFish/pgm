@@ -60,4 +60,4 @@ mf.fit(x=[rating.user.values, rating.movie.values], y=rating.rating.values, epoc
 loss,rmse = mf.evaluate(x=[test.user.values,test.movie.values],y=test.rating.values)
 print("RMSE:{:.4f}".format(rmse))
 with open(arg.result, 'a',encoding='utf-8',newline='') as f:
-    f.write("PMF,{:.4f}".format(rmse))
+    f.write("PMF,{:.4f}\n".format(rmse))
