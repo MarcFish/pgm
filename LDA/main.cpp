@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include<boost/program_options.hpp>
+#include"lda.h"
 using namespace std;
 namespace po = boost::program_options;
 vector<vector<int>> doc;
@@ -50,7 +51,7 @@ int main(int argc, char const* argv[]) {
 		std::cout << "input param wrong!!!" << endl;
 	}
 	po::notify(vm);
-	// read doc file
+	cout << "read doc file" << endl;
 	ifstream docStream;
 	docStream.open(docfile);
 	while (!docStream.eof()) {
@@ -58,4 +59,7 @@ int main(int argc, char const* argv[]) {
 	}
 	docStream.close();
 	doc.pop_back();
+	LDA lda = LDA(doc);
+	cout << "init model" << endl;
+	lda.initModel();
 }

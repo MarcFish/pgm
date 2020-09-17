@@ -6,7 +6,6 @@ private:
 	double alpha;
 	double beta;
 	int iterNumber;
-	int topicNumber;
 	int infNumber;
 	vector<vector<int>> nmk;
 	vector<vector<int>> nkt;
@@ -18,9 +17,9 @@ private:
 	vector<vector<int>> doc;
 	int V, K, M;  // vocabulary, topic, document
 public:
-	LDA(vector<vector<int>> doc, double alpha = 0.5, double beta = 0.1, int iterNumber = 100, int infNumber = 10, int topicNumber = 100);
+	LDA(vector<vector<int>> doc, double alpha = 0.5, double beta = 0.1, int iterNumber = 100, int infNumber = 10, int topicNumber = 100):
+		alpha(alpha), beta(beta), iterNumber(iterNumber), infNumber(infNumber), K(topicNumber), doc(doc) {}
 	void initModel();
 	void update();
 	void inference();
-	void perplexity();
 };
