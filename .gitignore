@@ -130,7 +130,11 @@ dmypy.json
 
 
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
-.vs
+*.vcxproj
+*.vs
+*.vcxproj.filters
+*LDA.vcxproj.user
+x64
 out
 # User-specific files
 *.rsuser
