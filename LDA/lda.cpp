@@ -45,7 +45,26 @@ void LDA::initModel() {
 	}
 }
 void LDA::inference() {
+	for(int i=0;i<iterNumber;i++){
+		if(i>=infNumber){
+			update();
+		}
+		for(int m=0;m<M;m++){
+			int N = doc.at(m).size();
+			for(int n=0;n<N;n++){
+				int newTopic = sampleTopic(m,n);
+				z.at(m).at(n) = newTopic;
+			}
+		}
+	}
 
+}
+void LDA::sampleTopic(int m, int n){
+	int oldTopic = z.at(m).at(n);
+	nmk.at(m).at(oldTopic)--;
+	nkt.at(oldTopic).at(doc.at(m).at(n))--;
+	nmkSum.at(m)--;
+	nktSum.at(oldTopic)--;
 }
 void LDA::update() {
 

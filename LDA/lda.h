@@ -22,4 +22,5 @@ public:
 	void initModel();
 	void update();
 	void inference();
+	void sampleTopic();
 };
