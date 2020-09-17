@@ -18,8 +18,9 @@ private:
 	vector<vector<int>> doc;
 	int V, K, M;  // vocabulary, topic, document
 public:
-	LDA(double alpha = 0.5, double beta = 0.1, int iterNumber = 100, int infNumber = 10, int topicNumber = 100);
-	void initModel(vector<vector<int>> doc);
+	LDA(vector<vector<int>> doc, double alpha = 0.5, double beta = 0.1, int iterNumber = 100, int infNumber = 10, int topicNumber = 100);
+	void initModel();
 	void update();
 	void inference();
+	void perplexity();
 };
