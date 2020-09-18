@@ -62,4 +62,5 @@ int main(int argc, char const* argv[]) {
 	LDA lda = LDA(doc);
 	cout << "init model" << endl;
 	lda.initModel();
+	lda.inference();
 }

@@ -1,6 +1,8 @@
 #include "lda.h"
 #include<set>
 #include<vector>
+#include<algorithm>
+#include<random>
 #include<boost/random/uniform_int.hpp>
 #include<boost/random.hpp>
 using namespace std;
@@ -46,6 +48,7 @@ void LDA::initModel() {
 }
 void LDA::inference() {
 	for(int i=0;i<iterNumber;i++){
+		cout << "iter:" << i << endl;
 		if(i>=infNumber){
 			update();
 		}
@@ -59,13 +62,35 @@ void LDA::inference() {
 	}
 
 }
-void LDA::sampleTopic(int m, int n){
+int LDA::sampleTopic(int m, int n){
 	int oldTopic = z.at(m).at(n);
 	nmk.at(m).at(oldTopic)--;
 	nkt.at(oldTopic).at(doc.at(m).at(n))--;
 	nmkSum.at(m)--;
 	nktSum.at(oldTopic)--;
+	vector<double>p(K);
+	for (int i = 0; i < K; i++) {
+		p.at(i) = (nkt.at(i).at(doc.at(m).at(n)) + beta) / (nktSum.at(i) + V * beta) * (nmk.at(m).at(i) + alpha) / (nmkSum.at(m) + K * alpha);
+	}
+	std::discrete_distribution<int> distribution(begin(p), end(p));
+	std::default_random_engine generator;
+	int newTopic = distribution(generator);
+	nmk.at(m).at(newTopic)++;
+	nkt.at(newTopic).at(doc.at(m).at(n))++;
+	nmkSum.at(m)++;
+	nktSum.at(newTopic)++;
+	return newTopic;
 }
 void LDA::update() {
+	for (int k = 0; k < K; k++) {
+		for (int v = 0; v < V; v++) {
+			phi.at(k).at(v) = (nkt.at(k).at(v) + beta) / (nktSum.at(k) + V * beta);
+		}
+	}
+	for (int m = 0; m < M; m++) {
+		for (int k = 0; k < K; k++) {
+			theta.at(m).at(k) = (nmk.at(m).at(k) + alpha) / (nmkSum.at(m) + K * alpha);
+		}
+	}
 
 }
