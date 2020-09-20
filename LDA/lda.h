@@ -22,5 +22,5 @@ public:
 	void initModel();
 	void update();
 	void inference();
-	void sampleTopic();
+	int sampleTopic(int m, int n);
 };
