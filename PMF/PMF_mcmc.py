@@ -12,6 +12,15 @@ tfd = tfp.distributions
 tfb = tfp.bijectors
 dtype = tf.float64
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--file",type=str,default='../data/train_rating.csv')
 parser.add_argument("--test",type=str,default='../data/test_rating.csv')
@@ -34,19 +43,16 @@ item_size = arg.item_size
 
 train = pd.read_csv(arg.file)
 test = pd.read_csv(arg.test)
-rating=coo_matrix((train.rating.values,(train.user.values,train.movie.values)),shape=(user_size,item_size)).todense()[:user_max,:item_max]
-test_rating=coo_matrix((test.rating.values,(test.user.values,test.movie.values)),shape=(user_size,item_size)).todense()[:user_max,:item_max]
+rating=coo_matrix((train.rating.values,(train.user.values,train.movie.values)),shape=(user_size,item_size)).todense()
+test_rating=coo_matrix((test.rating.values,(test.user.values,test.movie.values)),shape=(user_size,item_size)).todense()
 test_rating_coo = coo_matrix(test_rating)
 
 Root = tfd.JointDistributionCoroutine.Root  # Convenient alias.
 def model():
-  u = yield Root(tfd.Sample(tfd.Normal(loc=tf.cast(0, dtype), scale=0.2),sample_shape=[dim,user_size]))
-  i = yield Root(tfd.Sample(tfd.Normal(loc=tf.cast(0, dtype), scale=0.2),sample_shape=[dim,item_size]))
-  r = tf.matmul(u,i,adjoint_a=True)
-  likelihood = yield tfd.Independent(
-        tfd.Normal(loc=r, scale=0.2),
-        reinterpreted_batch_ndims=2
-    )
+    u = yield Root(tfd.Sample(tfd.MultivariateNormalDiag(loc=tf.zeros(arg.embed_size), scale_identity_multiplier=0.2), sample_shape=(user_size)))
+    i = yield Root(tfd.Sample(tfd.MultivariateNormalDiag(loc=tf.zeros(arg.embed_size), scale_identity_multiplier=0.2), sample_shape=(item_size)))
+    r = tf.matmul(u,i, transpose_b=True)
+    likelihood = yield tfd.Independent(tfd.Normal(loc=r, scale=0.2), reinterpreted_batch_ndims=2)
 
 model = tfd.JointDistributionCoroutine(model)
 
@@ -54,7 +60,7 @@ def joint_log_prob(r,u,e):
   return model.log_prob(u,e,r)
 unnormalized_posterior_log_prob = functools.partial(joint_log_prob, rating)
 
-u0,i0,_ = mdl_ols_coroutine.sample()
+u0, i0, _ = model.sample()
 initial_state = [u0,i0]
 unconstraining_bijectors = [
     tfb.Identity(),
@@ -74,13 +80,8 @@ def sample():
                  num_leapfrog_steps=5),
             bijector=unconstraining_bijectors),
          num_adaptation_steps=1000))
-
 r_ = sample()
 U=tf.squeeze(tf.reduce_mean(r_[0][0],0))
 I=tf.squeeze(tf.reduce_mean(r_[0][1],0))
-r_=tf.matmul(U,I,adjoint_a=True).numpy()
+r_=tf.matmul(U,I, transpose_b=True).numpy()
 rmse = np.sqrt(mse(r_[test_rating_coo.nonzero()], test_rating_coo.data))
-
-print("RMSE:{:.4f}".format(rmse))
-with open(arg.result, 'a',encoding='utf-8',newline='') as f:
-    f.write("MF,{:.4f}\n".format(rmse))
